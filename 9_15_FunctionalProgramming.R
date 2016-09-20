@@ -1,5 +1,6 @@
 # R: Functional Programming
-#9/15 Micah and Rafael
+# 9/15 Micah and Rafael
+
 
 df= data.frame(matrix(1:100, nrow=10))
 df
@@ -13,7 +14,7 @@ means
 
 #or use sapply()
 
-means = sapply(1:ncol(df)), function(i) mean(df[[i]])
+means = sapply(1:ncol(df), function(i) mean(df[[i]]))
 means
 
 
@@ -39,7 +40,6 @@ str(mtcars)
 
 unlist(theclass)
 
-standardize = lapply(1:length(mtcars), function(x) )
 
 standardizedf = function(df) {
   changes=lapply(df, function(c) (c-mean(c))/sd(c))
@@ -65,8 +65,12 @@ standardize_numeric = function(df) {
       column
     }
   })
-  newdf= data.frame(newdf)
-  newdf
+  #newdf= data.frame(newdf)
+  #newdf
+  
+  #BETTER WAY df[] brackets ensure df stays data frame type
+  df[]=newdf
+  df
 }
 
 df = data.frame(matrix(1:100, nrow = 10))
@@ -141,7 +145,7 @@ sum(sapply(10:100, function(i) ((2^i/i)+(3^i)/(i^2))))
 sapply(seq(3,6,.1), function(x) exp(x)*cos(x) )
 
 
-
+#CODE FROM YESTERDAY
 prep_for_lr= function(df) {
   n = length(df)
   dfnew=data.frame(matrix(nrow=nrow(df)))
@@ -166,7 +170,6 @@ prep_for_lr= function(df) {
 }
 
 #DOESNT WORK
-
 prep_linreg = function(df) {
   #new_df=data.frame(matrix(1:nrow(df)*ncol(df), nrow=nrow(df), ncol=ncol(df)))
   
@@ -185,7 +188,10 @@ prep_linreg = function(df) {
 unlist(new_df_stuff, recursive=F)
 }
 
-test=data.frame(num=as.factor(c(2,3,3,3,2)), gender= c("male", "female","male", "female", "dunno"), morfactor= as.factor(c(12,12,12,7,12)))
+test=data.frame(num=as.factor(c(2,3,3,3,2)), 
+    gender= c("male", "female","male", "female", "dunno"),
+    morfactor= as.factor(c(12,12,12,7,12)))
+
 prep_linreg(test)
 lapply(1:10, function(x) return(c(x,x^2)))
 
@@ -261,4 +267,5 @@ Position(is_five, g, right=T)
 Reduce("|", is_five(f))
   #All would do this
 Reduce("&", is_five(c(5,5,5,5,5,5)))
-getwd()
+
+########### FINISHED ##############

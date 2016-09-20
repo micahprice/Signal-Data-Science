@@ -1,3 +1,7 @@
+# R: Attributes, Factors, and Matrices
+# 9/14 Micah and Adom
+
+
 attributes(mtcars)
 
 attributes(mtcars)[1] = NULL 
