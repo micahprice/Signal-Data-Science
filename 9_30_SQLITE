@@ -1,0 +1,94 @@
+
+-- 9/30 SQLITE Micah
+
+.read company.sql
+
+select 'The following tables are contained in company.sql:';
+.tables
+
+
+select 'Table "records" contains the following columns:';
+pragma table_info(records);
+
+select 'Table "records" contains '||count(*)||' rows' 
+from records; 
+
+
+select 'Table "meetings" contains the following columns:';
+pragma table_info(meetings);
+
+-- Company SQL Quieries
+SELECT name FROM records WHERE supervisor = 'Oliver Warbucks';
+SELECT * FROM records WHERE supervisor = name;
+SELECT name FROM records WHERE salary > 50000 ORDER BY name;
+
+SELECT y.name, y.salary, y.supervisor, sup.salary
+FROM records AS y JOIN records AS sup ON y.supervisor = sup.name
+WHERE sup.salary > 2*y.salary;
+
+SELECT emp.name FROM records as emp 
+JOIN records as sup ON emp.supervisor = sup.name
+WHERE emp.division != sup.division;
+
+SELECT x.day, x.time FROM meetings as x JOIN records as y
+ON x.division = y.division WHERE  y.supervisor = 'Oliver Warbucks';
+
+--BETTER THAN SOLUTIONS (Middle Manager)
+SELECT DISTINCT(x.name) FROM records AS x JOIN records AS y ON x.name = y.supervisor
+WHERE x.name != x.supervisor;
+
+--Could lose warbucks here if you want
+SELECT DISTINCT(emp.name) FROM records as emp 
+JOIN records as sup ON emp.supervisor = sup.name 
+  JOIN meetings as x ON x.division = emp.division 
+    JOIN meetings as y ON y.division = sup.division
+where x.day == y.day;
+
+SELECT supervisor, SUM(salary) FROM records
+GROUP BY supervisor;
+
+--POOR WAY
+SELECT x FROM (SELECT COUNT(salary) as y, salary as x FROM records GROUP BY salary) 
+WHERE y > 1; 
+--NOT POOR WAY
+SELECT salary FROM records
+GROUP BY salary HAVING COUNT(salary) > 1;
+
+--Recursive WITH statements 
+
+--example
+ WITH
+schedule(day, dresscode) AS (
+SELECT "Monday", "Sports" UNION
+SELECT "Tuesday", "Drag" UNION
+SELECT "Wednesday", "Regular" UNION
+SELECT "Thursday", "Throwback" UNION
+SELECT "Friday", "Casual"
+)
+SELECT a.name, b.dresscode FROM
+records AS a, schedule AS b, meetings AS c
+WHERE a.division = c.division AND
+b.day = c.day ORDER BY a.name;
+
+--example (recursive) (1-5)
+WITH num(n) AS (
+SELECT 0 UNION
+SELECT n + 1 FROM num WHERE n < 5
+)
+SELECT * FROM num;
+
+--factorial
+WITH num(n, factorial) AS (
+SELECT 1, 1 UNION
+SELECT n + 1, (n+1)*factorial FROM num WHERE n < 10
+)
+SELECT * FROM num;
+
+--groups of three
+WITH num(first, second, third) AS (
+SELECT 0, 1, 2 UNION
+SELECT first + 3, second + 3, third + 3 FROM num WHERE third < 14
+)
+SELECT * FROM num;
+
+--PRESIDENTIAL DOGS

@@ -1,0 +1,192 @@
+---
+title: "10/4 Clustering"
+author: "Micah and Michelle"
+date: "October 4, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Clustering
+## Agglomerative Hierarchical Clustering
+### Using hclust()
+
+```{r message=FALSE }
+library(readr)
+library("dplyr")
+library(cluster)
+library(pvclust)
+dfprotein = read_delim('~/R/protein-consumption/protein.txt', delim = "\t")
+```
+
+``` {r}
+
+# df = read.csv('~/R/protein-consumption/protein.txt', sep = "\t")
+df = scale(select(dfprotein, -Country))
+rownames(df) = dfprotein$Country
+D = dist(df, method = 'euclidian')
+H = hclust(D, method = "ward.D2")
+plot(H)
+cutree(H,4)
+
+print_clusters = function(labels, k) {
+  for(i in 1:k) {
+    print(paste("cluster", i))
+    print(dfprotein[labels == i, c("Country", "RedMeat", "Fish", "Fr&Veg")])
+  }
+}
+
+k = 5
+print_clusters(cutree(H,4),k)
+
+lapply(2:5, function(x) clusplot(df, cutree(H,x), color = TRUE, shade = TRUE, labels = 2, lines = 0))
+
+```
+
+### Validating clusters
+``` {r results = 'hide', message=FALSE}
+boot1 = pvclust(t(df), method.hclust = "ward.D2", method.dist = "euclidean")
+```
+```{r}
+plot(boot1)
+pvrect(boot1, alpha = 0.95)
+```
+Using Approximately Unbiased p-values (from multiscale bootstrap resampling), we are 95% confident that the red boxes are, in fact, clusters. This can be interpreted as saying there is very probably something similar between countries in the three boxes. The box of two isn't very insightful.
+
+### K-means clustering
+```{r}
+
+#Using kmeans()
+kmeans(df, 4)
+kmeans_plot = function(data, k) {
+  ans = kmeans(data,k)
+  clusplot(data, ans$cluster, color = TRUE, shade = TRUE, labels = , lines = 0)
+}
+
+kmeans_plot(df,5)
+kmeans_plot(df,5)
+kmeans_plot(df,5)
+ #RUN multiple times,
+#NOT STABLE RESULTS
+kmeans_plot(df,2)
+#Oh, so stable
+df_outlier = rbind(df, rep(-2.5,9))
+rownames(df_outlier)[nrow(df_outlier)] = 'DYSTOPIA'
+#Dystopia eats proteins 2.5 SD's less than everyone else on average
+
+kmeans_plot(df_outlier, 2)
+kmeans_plot(df_outlier, 5)
+#Not particularly resiliant to outliers
+
+#Validating a choice of K
+library(fpc)
+library('ggplot2')
+ch = kmeansruns(df, krange = 1:10, criterion = "ch")
+asw = kmeansruns(df, krange = 1:10, criterion = "asw")
+qplot(1:10, ch$crit)
+qplot(1:10, asw$crit)
+#k=2 seems best
+```
+``` {r results = 'hide'}
+cboot = clusterboot(df, clustermethod = kmeansCBI, runs = 100, iter.max = 100, krange = 5)
+```
+```{r}
+cboot$bootmean
+cboot$result$partition  
+cboot$bootbrd
+#w/ k =5, one cluster is pretty unstable and another is the most stable (number will change)
+#stability ~ internal similarity
+clusplot(df, cboot$result$partition, color = TRUE, shade = TRUE, labels = 2, lines = 0)
+```
+##Mixture Models
+### Univariate mixture models
+
+```{r message=FALSE}
+library('datasets')
+library('mixtools')
+```
+``` {r}
+df_faith = faithful
+qplot(df_faith$waiting, bins = 20)
+qplot(df_faith$eruptions, bins = 20)
+mix_wait = normalmixEM(df_faith$waiting)
+plot(mix_wait, density = TRUE)
+summary(mix_wait)
+#try multiple times. Can take different # of iterations, but converges on ~same value
+
+mix_wait1 = normalmixEM(df_faith$waiting, k = 2)
+plot(mix_wait, density = TRUE, which = 2)
+summary(mix_wait1)
+
+mix_wait2 = normalmixEM(df_faith$waiting, k = 3)
+plot(mix_wait2, density = TRUE, which = 2)
+# Danger Will Robinson. Run k=3 mutliple times! I like the one with the tiny baby in the corner.
+
+mix_semi = spEMsymloc(df_faith$waiting, mu0 = 2, bw = 2)
+summary(mix_semi)
+plot(mix_semi)
+
+df_outlier = rbind(df_faith, c(7,10), c(25,150))
+mix_semi = spEMsymloc(df_outlier$waiting, mu0 = 2, bw = 2)
+plot(mix_semi)
+
+mix_wait3 = normalmixEM(df_outlier$waiting, k = 2)
+plot(mix_wait3, density = TRUE, which = 2)
+
+#compare outlier values to real values
+summary(mix_semi)  #semiparametric w/ outlier
+summary(mix_wait3) #parametric w/ outlier
+summary(mix_wait1) #parametric w/o outlier (right answer)
+
+# Semiparametric works better in dealing with outliers. Gaussian fails hard. The standard deviations can be very wrong for both of them, but Semiparametric conserves the mean well. It can overestimate the standard deviation in comparison to the answer for the original data. But Gaussian is even worse.
+
+```
+
+## Multivariate mixture models
+``` {r message=FALSE}
+library('mclust')
+```
+```{r}
+#scale() not that important
+plot(df_faith)
+multi = Mclust(scale(df_faith))
+plot(multi)
+
+plot(Mclust(scale(df_faith), G = 2))
+
+# Going back to protein data
+multi_protein = Mclust(df)
+plot(multi_protein)
+
+df = data.frame(df)
+mix_protein = normalmixEM(df$Eggs, k = 3)
+plot(mix_protein, density = TRUE, which = 2)
+```
+``` {r results = 'hide'}
+np_faith = npEM(df_faith, mu0 = 3)
+np_protein = npEM(df, mu0 = 2)
+```
+``` {r}
+plot(np_faith)
+summary(np_faith)
+
+
+plot(np_protein)
+summary(np_protein)
+names(df)
+ # So squiggly
+
+```
+Packages/functions used:  
+D = dist(df, method = 'euclidian')  
+H = hclust(D, method = "ward.D2")  , plot H, cutree(H,4)  
+from cluster: clusplot()  
+from pvclust: pvclust(), pvrect()  
+kmeans()  
+from fpc: clusterboot, c$bootmean, c$result$partition, c$bootbrd  
+from mixtools: normalmixEM() gaussian mixtures, spEMsymloc() semiparametric, npEM() nonparametric  
+from mclust: Mclust() multivariate parametric (Gaussian)  
+
+# END
