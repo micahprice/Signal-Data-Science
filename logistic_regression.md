@@ -24,7 +24,7 @@ In logistic regression Beta_1 of 1.6 would mean every increase in x_1 by 1 incre
 If you apply the exponential to both sides of eq. 11.4, you get  odds=e^(B_0 + B_1 * x_1 ...). This shows the direct relationship between odds and the Betas.  
 
 Example:
-If there is only one term total (say, height), and the beta coefficient is 2, then an increase in height from 0 to 5 would change the odds from odds=e^(2*0)=1, to odds=e^(2*5)= 22026.  That's a pretty big change, **BUT**
+If there is only one term total (say, height), and the beta coefficient is 2, then an increase in height from 0 to 5 would change the odds from odds=e^(2 * 0)=1, to odds=e^(2 * 5)= 22026.  That's a pretty big change, **BUT**
 it's important to notice that it depends on the starting point. A change from 5 to 10 cm will change the odds in a different way than the change from 0 to 5.
 
 
